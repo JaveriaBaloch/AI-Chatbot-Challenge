@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Health Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .chat-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 20px 20px 0 0;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .status-bar {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .agent-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .agent-symptom { background: #ffeaa7; color: #d63031; }
+        .agent-medication { background: #74b9ff; color: #0984e3; }
+        .agent-lifestyle { background: #a29bfe; color: #6c5ce7; }
+        .agent-fallback { background: #dfe6e9; color: #636e72; }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+            scroll-behavior: smooth;
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 4px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 16px 20px;
+            border-radius: 18px;
+            line-height: 1.6;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #2d3436;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.assistant .message-content h3 {
+            color: #667eea;
+            font-size: 16px;
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .message.assistant .message-content h3:first-child {
+            margin-top: 0;
+        }
+
+        .message.assistant .message-content h4 {
+            color: #764ba2;
+            font-size: 15px;
+            margin: 14px 0 6px 0;
+            font-weight: 600;
+        }
+
+        .message.assistant .message-content h4:first-child {
+            margin-top: 0;
+        }
+
+        .message.assistant .message-content hr {
+            border: none;
+            border-top: 2px solid #e9ecef;
+            margin: 16px 0;
+        }
+
+        .message.assistant .message-content blockquote {
+            border-left: 4px solid #667eea;
+            margin: 12px 0;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            color: #495057;
+            font-style: italic;
+        }
+
+        .message.assistant .message-content ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message.assistant .message-content li {
+            margin: 6px 0;
+            line-height: 1.5;
+        }
+
+        .message.assistant .message-content ol {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .message.assistant .message-content strong {
+            color: #2d3436;
+            font-weight: 600;
+        }
+
+        .message.assistant .message-content p {
+            margin: 10px 0;
+        }
+
+        .message.assistant .message-content em {
+            font-style: italic;
+            color: #636e72;
+        }
+
+        .message-content code {
+            background: #f1f3f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .message.assistant .message-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .message.assistant .message-content table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant .message-content table th {
+            padding: 12px 16px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .message.assistant .message-content table td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .message.assistant .message-content table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .message.assistant .message-content table tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .message.assistant .message-content table tbody tr:hover {
+            background: #e9ecef;
+            transition: background 0.2s;
+        }
+
+        .typing-indicator {
+            display: none;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 18px;
+            width: fit-content;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-left: 52px;
+        }
+
+        .typing-indicator.active {
+            display: block;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #b2bec3;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 24px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button, .reset-button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .reset-button {
+            background: #dfe6e9;
+            color: #636e72;
+        }
+
+        .reset-button:hover {
+            background: #b2bec3;
+        }
+
+        .error-message {
+            background: #ff7675;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 20px;
+            display: none;
+        }
+
+        .error-message.active {
+            display: block;
+        }
+
+        /* Appointment Booking Modal */
+        .appointment-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .appointment-modal.active {
+            display: flex;
+        }
+
+        .appointment-content {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .appointment-content h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 22px;
+        }
+
+        .specialist-card {
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .specialist-card:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .specialist-card.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .specialist-name {
+            font-weight: 600;
+            color: #2d3436;
+            font-size: 16px;
+        }
+
+        .specialist-info {
+            font-size: 14px;
+            color: #636e72;
+            margin-top: 4px;
+        }
+
+        .slot-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 16px 0;
+        }
+
+        .slot-button {
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .slot-button:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .slot-button.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .modal-button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-button.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .modal-button.secondary {
+            background: #dfe6e9;
+            color: #636e72;
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .book-appointment-btn {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .book-appointment-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .input-group {
+            margin: 16px 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #2d3436;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+        }
+
+        .step-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #636e72;
+        }
+
+        /* Chat History Sidebar */
+        .sidebar {
+            position: fixed;
+            left: -320px;
+            top: 0;
+            width: 320px;
+            height: 100vh;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            transition: left 0.3s;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .sidebar-header h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .new-chat-btn {
+            width: 100%;
+            padding: 10px;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .new-chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+        }
+
+        .chat-history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .chat-history-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+
+        .chat-history-item:hover {
+            background: #e9ecef;
+            transform: translateX(4px);
+        }
+
+        .chat-history-item.active {
+            background: #e3f2fd;
+            border-left-color: #667eea;
+        }
+
+        .chat-history-item .chat-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #2d3436;
+            margin-bottom: 4px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .chat-history-item .chat-meta {
+            font-size: 11px;
+            color: #636e72;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .sidebar-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            z-index: 999;
+            transition: all 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .read-only-banner {
+            display: none;
+            padding: 10px;
+            background: #fff3cd;
+            border-bottom: 2px solid #ffc107;
+            text-align: center;
+            font-size: 13px;
+            color: #856404;
+            font-weight: 600;
+        }
+
+        .read-only-banner.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Toggle Button -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    
+    <!-- Chat History Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2>💬 Chat History</h2>
+            <button class="new-chat-btn" onclick="createNewChat()">+ New Chat</button>
+        </div>
+        <div class="chat-history-list" id="chatHistoryList">
+            <!-- Chat history items will be loaded here -->
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="read-only-banner" id="readOnlyBanner">
+            📖 Viewing archived chat (read-only)
+        </div>
+        
+        <div class="chat-header">
+            <h1>🏥 Health AI Assistant</h1>
+            <p>Your healthcare conversation companion</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span>API Connected</span>
+            </div>
+            <div id="currentAgent" class="agent-badge agent-fallback">Ready</div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="chat-messages" id="chatMessages">
+            <!-- Messages will be loaded dynamically -->
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <input 
+                    type="text" 
+                    class="chat-input" 
+                    id="messageInput" 
+                    placeholder="Type your health question here..."
+                    autocomplete="off"
+                >
+                <button class="send-button" id="sendButton">Send</button>
+                <button class="reset-button" id="resetButton">New Chat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Appointment Booking Modal -->
+    <div class="appointment-modal" id="appointmentModal">
+        <div class="appointment-content">
+            <div class="step-indicator" id="stepIndicator">Step 1 of 3</div>
+            <h2 id="modalTitle">Select a Specialist</h2>
+            <div id="modalBody"></div>
+            <div class="modal-actions">
+                <button class="modal-button secondary" onclick="closeAppointmentModal()">Cancel</button>
+                <button class="modal-button primary" id="modalNextButton" onclick="nextAppointmentStep()">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://127.0.0.1:8000';  // Changed from localhost
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const resetButton = document.getElementById('resetButton');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const currentAgent = document.getElementById('currentAgent');
+        const errorMessage = document.getElementById('errorMessage');
+        
+        // Session management
+        let currentSessionId = null;
+        let isReadOnly = false;
+
+        // Check API health on load
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                const data = await response.json();
+                console.log('API Health:', data);
+            } catch (error) {
+                showError('Cannot connect to API. Please ensure backend is running on port 8000.');
+            }
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('active');
+            setTimeout(() => {
+                errorMessage.classList.remove('active');
+            }, 5000);
+        }
+
+        function parseMarkdown(text) {
+            // Convert markdown to HTML
+            let html = text;
+            
+            // Parse tables first (before other conversions)
+            html = parseTable(html);
+            
+            // Horizontal rules (---, ***, ___)
+            html = html.replace(/^(?:\*{3,}|-{3,}|_{3,})$/gm, '<hr>');
+            
+            // Headers (must be done before lists to avoid conflicts)
+            html = html.replace(/^#### (.+)$/gm, '<h4>$1</h4>');
+            html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+            
+            // Blockquotes
+            html = html.replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>');
+            
+            // Process inline formatting BEFORE lists to handle bold/italic in list items
+            // Bold (**text** or __text__)
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+            
+            // Italic (*text* or _text_) - more careful to avoid list markers
+            html = html.replace(/(?<!\*)\*(?!\*)([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
+            html = html.replace(/(?<!_)_(?!_)([^_\n]+?)_(?!_)/g, '<em>$1</em>');
+            
+            // Process lists
+            // First, handle list items (both bullet and numbered)
+            const lines = html.split('\n');
+            const processed = [];
+            let inList = false;
+            let listType = null;
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i];
+                const bulletMatch = line.match(/^[\*\-+]\s+(.+)$/);
+                const numberedMatch = line.match(/^\d+\.\s+(.+)$/);
+                
+                if (bulletMatch) {
+                    if (!inList || listType !== 'ul') {
+                        if (inList) processed.push(`</${listType}>`);
+                        processed.push('<ul>');
+                        inList = true;
+                        listType = 'ul';
+                    }
+                    processed.push(`<li>${bulletMatch[1]}</li>`);
+                } else if (numberedMatch) {
+                    if (!inList || listType !== 'ol') {
+                        if (inList) processed.push(`</${listType}>`);
+                        processed.push('<ol>');
+                        inList = true;
+                        listType = 'ol';
+                    }
+                    processed.push(`<li>${numberedMatch[1]}</li>`);
+                } else {
+                    if (inList) {
+                        processed.push(`</${listType}>`);
+                        inList = false;
+                        listType = null;
+                    }
+                    processed.push(line);
+                }
+            }
+            
+            if (inList) {
+                processed.push(`</${listType}>`);
+            }
+            
+            html = processed.join('\n');
+            
+            // Line breaks - convert double newlines to paragraph breaks
+            html = html.replace(/\n\n+/g, '</p><p>');
+            html = html.replace(/\n/g, '<br>');
+            
+            // Clean up extra breaks around block elements
+            html = html.replace(/<br>(<\/?(?:h3|h4|ul|ol|hr|table|blockquote)[^>]*>)/g, '$1');
+            html = html.replace(/(<\/?(?:h3|h4|ul|ol|hr|table|blockquote)[^>]*>)<br>/g, '$1');
+            
+            // Wrap in paragraph if not already wrapped
+            if (!html.match(/^<(?:h3|h4|ul|ol|table|hr|blockquote)/)) {
+                html = '<p>' + html + '</p>';
+            }
+            
+            // Clean up empty paragraphs
+            html = html.replace(/<p><\/p>/g, '');
+            html = html.replace(/<p>\s*<\/p>/g, '');
+            
+            return html;
+        }
+
+        function parseTable(text) {
+            // Match markdown tables
+            const tableRegex = /\|(.+)\|\n\|(?::?-+:?\|)+\n((\|.+\|\n?)+)/g;
+            
+            return text.replace(tableRegex, function(match) {
+                const lines = match.trim().split('\n');
+                if (lines.length < 3) return match;
+                
+                // Parse header
+                const headers = lines[0].split('|').filter(cell => cell.trim()).map(cell => cell.trim());
+                
+                // Parse rows (skip separator line)
+                const rows = lines.slice(2).map(line => 
+                    line.split('|').filter(cell => cell.trim()).map(cell => cell.trim())
+                );
+                
+                // Build HTML table
+                let table = '<table><thead><tr>';
+                headers.forEach(header => {
+                    table += `<th>${header}</th>`;
+                });
+                table += '</tr></thead><tbody>';
+                
+                rows.forEach(row => {
+                    table += '<tr>';
+                    row.forEach(cell => {
+                        table += `<td>${cell}</td>`;
+                    });
+                    table += '</tr>';
+                });
+                
+                table += '</tbody></table>';
+                return table;
+            });
+        }
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = isUser ? '👤' : '🤖';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            if (isUser) {
+                contentDiv.innerHTML = content.replace(/\n/g, '<br>');
+            } else {
+                contentDiv.innerHTML = parseMarkdown(content);
+                
+                // Add appointment booking button if message suggests booking OR mentions specialist selection
+                if (content.toLowerCase().includes('book an appointment') || 
+                    content.toLowerCase().includes('schedule an appointment') ||
+                    content.toLowerCase().includes('which specialist') ||
+                    content.toLowerCase().includes('select specialist') ||
+                    content.toLowerCase().includes('choose a specialist')) {
+                    const bookBtn = document.createElement('button');
+                    bookBtn.className = 'book-appointment-btn';
+                    bookBtn.textContent = '📅 Book Appointment';
+                    
+                    // Check if user needs to select specialist type first
+                    if (content.toLowerCase().includes('select specialist') || 
+                        content.toLowerCase().includes('choose a specialist') ||
+                        content.toLowerCase().includes('what health or wellness concern')) {
+                        bookBtn.onclick = () => openSpecialistSelectionModal();
+                    } else {
+                        bookBtn.onclick = () => openAppointmentModal(content);
+                    }
+                    contentDiv.appendChild(bookBtn);
+                }
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function updateAgentBadge(agentType) {
+            const agentMap = {
+                'symptom': { text: 'Symptom Agent', class: 'agent-symptom' },
+                'medication': { text: 'Medication Agent', class: 'agent-medication' },
+                'lifestyle': { text: 'Lifestyle Agent', class: 'agent-lifestyle' },
+                'fallback': { text: 'General', class: 'agent-fallback' }
+            };
+
+            const agent = agentMap[agentType] || agentMap['fallback'];
+            currentAgent.textContent = agent.text;
+            currentAgent.className = `agent-badge ${agent.class}`;
+        }
+
+        async function sendMessage() {
+            // Prevent sending if in read-only mode
+            if (isReadOnly) {
+                showError('Cannot send messages in archived chat. Create a new chat to continue.');
+                return;
+            }
+            
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Disable input
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Add user message
+            addMessage(message, true);
+            messageInput.value = '';
+
+            // Show typing indicator
+            typingIndicator.classList.add('active');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/process`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        text: message,
+                        session_id: currentSessionId
+                    }),
+                    mode: 'cors'  // Explicitly set CORS mode
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.text();
+                    throw new Error(`API request failed: ${response.status} - ${errorData}`);
+                }
+
+                const data = await response.json();
+                
+                // Hide typing indicator
+                typingIndicator.classList.remove('active');
+
+                // Add assistant response
+                addMessage(data.processed);
+
+                // Update agent badge
+                updateAgentBadge(data.agent);
+
+            } catch (error) {
+                typingIndicator.classList.remove('active');
+                console.error('Error:', error);
+                addMessage('Sorry, I encountered an error. Please try again.');
+                showError(error.message);
+            } finally {
+                // Re-enable input
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        async function resetConversation() {
+            if (!confirm('Are you sure you want to reset the conversation?')) {
+                return;
+            }
+
+            try {
+                await fetch(`${API_BASE_URL}/api/reset`, { method: 'POST' });
+                
+                // Show welcome message
+                showWelcomeMessage();
+                
+                // Reset agent badge
+                updateAgentBadge('fallback');
+                
+            } catch (error) {
+                showError('Failed to reset conversation');
+            }
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        resetButton.addEventListener('click', resetConversation);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        async function loadChatHistory() {
+            try {
+                const url = currentSessionId 
+                    ? `${API_BASE_URL}/api/history?session_id=${currentSessionId}`
+                    : `${API_BASE_URL}/api/history`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.messages && data.messages.length > 0) {
+                    // Clear welcome message
+                    chatMessages.innerHTML = '';
+                    
+                    // Add all previous messages
+                    data.messages.forEach(msg => {
+                        addMessage(msg.user, true);
+                        addMessage(msg.response, false);
+                        updateAgentBadge(msg.agent);
+                    });
+                    
+                    console.log(`Loaded ${data.messages.length} messages from history`);
+                } else {
+                    // Show welcome message if no history
+                    showWelcomeMessage();
+                }
+            } catch (error) {
+                console.error('Failed to load chat history:', error);
+                showWelcomeMessage();
+            }
+        }
+
+        function showWelcomeMessage() {
+            chatMessages.innerHTML = '';
+            addMessage(`Hello! I'm your Health AI assistant. I can help you with:
+
+💊 <strong>Symptoms</strong> - Questions about physical symptoms and when to seek care
+💉 <strong>Medications</strong> - Information about medications and side effects
+🏃 <strong>Lifestyle</strong> - Guidance on diet, exercise, and wellness
+
+How can I help you today?`);
+        }
+
+        // Chat History Management
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        async function loadChatList() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/chats/list`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const listContainer = document.getElementById('chatHistoryList');
+                    listContainer.innerHTML = '';
+                    
+                    if (data.chats.length === 0) {
+                        listContainer.innerHTML = '<p style="padding: 20px; text-align: center; color: #636e72;">No chat history</p>';
+                        return;
+                    }
+                    
+                    data.chats.forEach(chat => {
+                        const item = document.createElement('div');
+                        const isCurrentChat = chat.session_id === currentSessionId;
+                        item.className = 'chat-history-item' + (isCurrentChat ? ' active' : '');
+                        item.onclick = () => switchToChat(chat.session_id, !isCurrentChat);
+                        
+                        const title = document.createElement('div');
+                        title.className = 'chat-title';
+                        title.textContent = chat.preview || 'Empty chat';
+                        
+                        const meta = document.createElement('div');
+                        meta.className = 'chat-meta';
+                        meta.innerHTML = `
+                            <span>${chat.message_count} messages</span>
+                            <span>${formatDate(chat.last_updated)}</span>
+                        `;
+                        
+                        item.appendChild(title);
+                        item.appendChild(meta);
+                        listContainer.appendChild(item);
+                    });
+                    
+                    // Set current session ID from backend if not already set
+                    if (!currentSessionId && data.current_session_id) {
+                        currentSessionId = data.current_session_id;
+                    }
+                    
+                    // If still no session and we have chats, use the most recent one
+                    if (!currentSessionId && data.chats.length > 0) {
+                        currentSessionId = data.chats[0].session_id;
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load chat list:', error);
+            }
+        }
+
+        async function createNewChat() {
+            try {
+                // Mark current chat as read-only before creating new one
+                isReadOnly = false;
+                document.getElementById('readOnlyBanner').classList.remove('show');
+                
+                const response = await fetch(`${API_BASE_URL}/api/chats/new`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    currentSessionId = data.session_id;
+                    isReadOnly = false;
+                    showWelcomeMessage();
+                    updateAgentBadge('fallback');
+                    await loadChatList();
+                    
+                    // Enable input
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    document.getElementById('readOnlyBanner').classList.remove('show');
+                    messageInput.placeholder = 'Type your health question here...';
+                    
+                    // Close sidebar if open
+                    const sidebar = document.getElementById('sidebar');
+                    if (sidebar.classList.contains('open')) {
+                        toggleSidebar();
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to create new chat:', error);
+                showError('Failed to create new chat');
+            }
+        }
+
+        async function switchToChat(sessionId, isArchived) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/chats/switch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentSessionId = sessionId;
+                    isReadOnly = isArchived;
+                    
+                    // Update UI based on read-only status
+                    const banner = document.getElementById('readOnlyBanner');
+                    if (isReadOnly) {
+                        banner.classList.add('show');
+                        messageInput.disabled = true;
+                        sendButton.disabled = true;
+                        messageInput.placeholder = 'This chat is archived (read-only)';
+                    } else {
+                        banner.classList.remove('show');
+                        messageInput.disabled = false;
+                        sendButton.disabled = false;
+                        messageInput.placeholder = 'Type your health question here...';
+                    }
+                    
+                    // Load the chat history
+                    await loadChatHistory();
+                    loadChatList();
+                    toggleSidebar();
+                }
+            } catch (error) {
+                console.error('Failed to switch chat:', error);
+                showError('Failed to load chat');
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+            
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        // Initialize app
+        async function initializeApp() {
+            await checkHealth();
+            await loadChatList(); // Load chat history list first
+            
+            // If no active session, create a new chat
+            if (!currentSessionId) {
+                await createNewChat();
+            } else {
+                // Load the current session
+                await loadChatHistory();
+            }
+            messageInput.focus();
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        resetButton.addEventListener('click', createNewChat); // Changed to create new chat
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Initialize on page load
+        initializeApp();
+
+        // Appointment Booking System
+        let appointmentState = {
+            step: 1,
+            condition: '',
+            specialists: [],
+            selectedSpecialist: null,
+            slots: [],
+            selectedSlot: null,
+            patientName: '',
+            manualSelection: false
+        };
+
+        async function openSpecialistSelectionModal() {
+            appointmentState.manualSelection = true;
+            appointmentState.step = 1;
+            
+            try {
+                // Fetch all specialist types
+                const response = await fetch(`${API_BASE_URL}/api/appointments/specialist-types`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    appointmentState.specialists = data.specialists;
+                    showSpecialistSelection();
+                    document.getElementById('appointmentModal').classList.add('active');
+                }
+            } catch (error) {
+                showError('Failed to load specialist types');
+            }
+        }
+
+        async function openAppointmentModal(messageContent) {
+            // Use user's original message if available, otherwise fall back to bot response
+            const userQuery = appointmentState.userMessage || messageContent;
+            appointmentState.condition = userQuery;
+            appointmentState.step = 1;
+            
+            try {
+                // Fetch specialists based on the user's original message
+                const response = await fetch(`${API_BASE_URL}/api/appointments/get-specialists`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ condition: userQuery })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    appointmentState.specialists = data.specialists;
+                    showSpecialistSelection();
+                    document.getElementById('appointmentModal').classList.add('active');
+                }
+            } catch (error) {
+                showError('Failed to load specialists');
+            }
+        }
+
+        function closeAppointmentModal() {
+            document.getElementById('appointmentModal').classList.remove('active');
+            appointmentState = { 
+                step: 1, 
+                specialists: [], 
+                selectedSpecialist: null, 
+                slots: [], 
+                selectedSlot: null,
+                manualSelection: false
+            };
+        }
+
+        function showSpecialistSelection() {
+            document.getElementById('stepIndicator').textContent = 'Step 1 of 3';
+            
+            if (appointmentState.manualSelection) {
+                document.getElementById('modalTitle').textContent = 'Select Specialist Type';
+            } else {
+                document.getElementById('modalTitle').textContent = 'Select a Specialist';
+            }
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = '';
+            
+            if (appointmentState.manualSelection) {
+                modalBody.innerHTML = '<p style="color: #636e72; margin-bottom: 16px;">Choose the type of specialist you\'d like to see:</p>';
+            }
+            
+            appointmentState.specialists.forEach((specialist, index) => {
+                const card = document.createElement('div');
+                card.className = 'specialist-card';
+                card.onclick = () => selectSpecialist(index);
+                
+                if (appointmentState.manualSelection) {
+                    card.innerHTML = `
+                        <div class="specialist-name">${specialist.specialty}</div>
+                        <div class="specialist-info">${specialist.name}</div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="specialist-name">${specialist.name}</div>
+                        <div class="specialist-info">${specialist.specialty}</div>
+                        <div class="specialist-info">${specialist.hospital}</div>
+                        <div class="specialist-info">Available: ${specialist.availability}</div>
+                    `;
+                }
+                modalBody.appendChild(card);
+            });
+            
+            document.getElementById('modalNextButton').textContent = 'Next';
+            document.getElementById('modalNextButton').disabled = true;
+        }
+
+        function selectSpecialist(index) {
+            appointmentState.selectedSpecialist = appointmentState.specialists[index];
+            
+            // Update UI
+            document.querySelectorAll('.specialist-card').forEach((card, i) => {
+                card.classList.toggle('selected', i === index);
+            });
+            
+            document.getElementById('modalNextButton').disabled = false;
+        }
+
+        async function nextAppointmentStep() {
+            if (appointmentState.step === 1) {
+                // Load available slots
+                try {
+                    const response = await fetch(`${API_BASE_URL}/api/appointments/get-slots`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            specialist_type: appointmentState.selectedSpecialist.type 
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    if (data.success) {
+                        appointmentState.slots = data.slots;
+                        appointmentState.step = 2;
+                        showSlotSelection();
+                    }
+                } catch (error) {
+                    showError('Failed to load appointment slots');
+                }
+            } else if (appointmentState.step === 2) {
+                appointmentState.step = 3;
+                showPatientInfo();
+            } else if (appointmentState.step === 3) {
+                await bookAppointment();
+            }
+        }
+
+        function showSlotSelection() {
+            document.getElementById('stepIndicator').textContent = 'Step 2 of 3';
+            document.getElementById('modalTitle').textContent = 'Choose a Date & Time';
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = '<div class="slot-grid"></div>';
+            const slotGrid = modalBody.querySelector('.slot-grid');
+            
+            appointmentState.slots.forEach((slot, index) => {
+                const button = document.createElement('button');
+                button.className = 'slot-button';
+                button.textContent = slot.display;
+                button.onclick = () => selectSlot(index);
+                slotGrid.appendChild(button);
+            });
+            
+            document.getElementById('modalNextButton').disabled = true;
+        }
+
+        function selectSlot(index) {
+            appointmentState.selectedSlot = appointmentState.slots[index];
+            
+            document.querySelectorAll('.slot-button').forEach((btn, i) => {
+                btn.classList.toggle('selected', i === index);
+            });
+            
+            document.getElementById('modalNextButton').disabled = false;
+        }
+
+        function showPatientInfo() {
+            document.getElementById('stepIndicator').textContent = 'Step 3 of 3';
+            document.getElementById('modalTitle').textContent = 'Confirm Your Details';
+            
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="input-group">
+                    <label>Your Name *</label>
+                    <input type="text" id="patientName" placeholder="Enter your full name" required />
+                </div>
+                <div class="input-group">
+                    <label>Email Address *</label>
+                    <input type="email" id="patientEmail" placeholder="your.email@example.com" required />
+                </div>
+                <div class="input-group">
+                    <label>Phone Number *</label>
+                    <input type="tel" id="patientPhone" placeholder="+1 (555) 123-4567" required />
+                </div>
+                <div style="margin-top: 20px; padding: 16px; background: #f8f9fa; border-radius: 8px;">
+                    <strong>Appointment Summary:</strong><br><br>
+                    <strong>Specialist:</strong> ${appointmentState.selectedSpecialist.name}<br>
+                    <strong>Specialty:</strong> ${appointmentState.selectedSpecialist.specialty}<br>
+                    <strong>Location:</strong> ${appointmentState.selectedSpecialist.hospital}<br>
+                    <strong>Date & Time:</strong> ${appointmentState.selectedSlot.display}
+                </div>
+            `;
+            
+            document.getElementById('modalNextButton').textContent = 'Confirm Booking';
+            document.getElementById('modalNextButton').disabled = false;
+        }
+
+        async function bookAppointment() {
+            const patientName = document.getElementById('patientName').value.trim();
+            const patientEmail = document.getElementById('patientEmail').value.trim();
+            const patientPhone = document.getElementById('patientPhone').value.trim();
+            
+            if (!patientName) {
+                showError('Please enter your name');
+                return;
+            }
+            
+            if (!patientEmail) {
+                showError('Please enter your email address');
+                return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(patientEmail)) {
+                showError('Please enter a valid email address');
+                return;
+            }
+            
+            if (!patientPhone) {
+                showError('Please enter your phone number');
+                return;
+            }
+            
+            try {
+                // Extract routing reasoning if available
+                const reasoning = appointmentState.responseMetadata?.routing?.reasoning || '';
+                
+                const response = await fetch(`${API_BASE_URL}/api/appointments/book`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        patient_name: patientName,
+                        patient_email: patientEmail,
+                        patient_phone: patientPhone,
+                        specialist_type: appointmentState.selectedSpecialist.type,
+                        slot_datetime: appointmentState.selectedSlot.datetime,
+                        reason: appointmentState.condition,
+                        reasoning: reasoning
+                    })
+                });
+                
+                const data = await response.json();
+                
+                console.log('Appointment booking response:', data);
+                
+                if (data.success) {
+                    console.log('Booking successful, preparing confirmation...');
+                    
+                    // Format appointment date
+                    const appointmentDate = appointmentState.selectedSlot.display;
+                    
+                    // Display personalized confirmation message
+                    const confirmationMessage = `✅ **Appointment Confirmed!**\n\n**See you on ${appointmentDate}!** 📅\n\nYour appointment with **${data.appointment.specialist.name}** has been confirmed.\n\n**Appointment ID:** ${data.appointment.id}\n\nMeanwhile, if you have any questions or need to reschedule:\n\n📧 **Email us at:** support@health.com\n📱 **Call us at:** +1 (555) 123-4567\n\nWe look forward to seeing you!`;
+                    
+                    console.log('Sending confirmation through chat API...');
+                    
+                    // Send confirmation as a system message through the API to save it
+                    try {
+                        const reasoning = appointmentState.responseMetadata?.routing?.reasoning || '';
+                        const confirmResponse = await fetch(`${API_BASE_URL}/api/appointments/confirm`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                session_id: currentSessionId,
+                                appointment_id: data.appointment.id,
+                                message: confirmationMessage,
+                                reasoning: reasoning
+                            })
+                        });
+                        
+                        if (confirmResponse.ok) {
+                            // Add the message to UI
+                            addMessage(confirmationMessage, false);
+                            console.log('Confirmation message added and saved');
+                        }
+                    } catch (err) {
+                        console.error('Failed to save confirmation:', err);
+                        // Still show the message even if saving fails
+                        addMessage(confirmationMessage, false);
+                    }
+                    
+                    // Update agent badge
+                    updateAgentBadge('fallback');
+                    
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    // Close modal
+                    setTimeout(() => {
+                        closeAppointmentModal();
+                        console.log('Modal closed');
+                    }, 300);
+                } else {
+                    showError('Failed to book appointment. Please try again.');
+                }
+            } catch (error) {
+                showError('Failed to book appointment');
+            }
+        }
+    </script>
+</body>
+</html>

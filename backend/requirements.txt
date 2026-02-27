@@ -1,0 +1,25 @@
+# Core web framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Data validation
+pydantic>=2.10.0
+
+# Environment variables
+python-dotenv>=1.0.0
+
+# Google AI
+python-dotenv
+google-generativeai
+google-genai
+
+# Testing
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+httpx>=0.26.0
+
+# HTTP client
+aiohttp>=3.9.0
+
+# Utilities
+pathlib>=1.0.1

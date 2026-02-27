@@ -1,0 +1,100 @@
+{
+  "specialists": {
+    "Neurologist": {
+      "name": "Dr. Sarah Johnson",
+      "specialty": "Neurology",
+      "hospital": "City Medical Center",
+      "availability": "Mon-Fri, 9AM-5PM"
+    },
+    "Cardiologist": {
+      "name": "Dr. Michael Chen",
+      "specialty": "Cardiology",
+      "hospital": "Heart & Vascular Institute",
+      "availability": "Mon-Fri, 8AM-6PM"
+    },
+    "OB-GYN": {
+      "name": "Dr. Emily Rodriguez",
+      "specialty": "Obstetrics & Gynecology",
+      "hospital": "Women's Health Center",
+      "availability": "Mon-Sat, 8AM-5PM"
+    },
+    "Primary Care Physician": {
+      "name": "Dr. James Williams",
+      "specialty": "Family Medicine",
+      "hospital": "Community Health Clinic",
+      "availability": "Mon-Fri, 8AM-6PM"
+    },
+    "Gastroenterologist": {
+      "name": "Dr. Lisa Park",
+      "specialty": "Gastroenterology",
+      "hospital": "Digestive Health Center",
+      "availability": "Mon-Fri, 9AM-5PM"
+    },
+    "Dermatologist": {
+      "name": "Dr. Robert Taylor",
+      "specialty": "Dermatology",
+      "hospital": "Skin Care Specialists",
+      "availability": "Tue-Sat, 9AM-4PM"
+    },
+    "Orthopedist": {
+      "name": "Dr. Amanda Martinez",
+      "specialty": "Orthopedic Surgery",
+      "hospital": "Bone & Joint Center",
+      "availability": "Mon-Fri, 8AM-5PM"
+    },
+    "Endocrinologist": {
+      "name": "Dr. David Kim",
+      "specialty": "Endocrinology",
+      "hospital": "Diabetes & Hormone Center",
+      "availability": "Mon-Fri, 9AM-4PM"
+    },
+    "Pulmonologist": {
+      "name": "Dr. Jennifer Lee",
+      "specialty": "Pulmonology",
+      "hospital": "Respiratory Care Center",
+      "availability": "Mon-Fri, 8AM-5PM"
+    },
+    "Psychiatrist": {
+      "name": "Dr. Rachel Anderson",
+      "specialty": "Psychiatry",
+      "hospital": "Mental Health Center",
+      "availability": "Mon-Fri, 9AM-5PM"
+    },
+    "Psychologist": {
+      "name": "Dr. Thomas Brown",
+      "specialty": "Clinical Psychology",
+      "hospital": "Behavioral Health Clinic",
+      "availability": "Mon-Fri, 8AM-6PM"
+    },
+    "Rheumatologist": {
+      "name": "Dr. Patricia White",
+      "specialty": "Rheumatology",
+      "hospital": "Arthritis & Autoimmune Center",
+      "availability": "Tue-Sat, 9AM-4PM"
+    },
+    "Physical Medicine": {
+      "name": "Dr. Kevin Lewis",
+      "specialty": "Physical Medicine & Rehabilitation",
+      "hospital": "Rehabilitation Center",
+      "availability": "Mon-Fri, 8AM-5PM"
+    },
+    "ENT Specialist": {
+      "name": "Dr. Nancy Harris",
+      "specialty": "Otolaryngology",
+      "hospital": "Ear, Nose & Throat Clinic",
+      "availability": "Mon-Fri, 9AM-5PM"
+    },
+    "Infectious Disease Specialist": {
+      "name": "Dr. Daniel Moore",
+      "specialty": "Infectious Diseases",
+      "hospital": "Infectious Disease Center",
+      "availability": "Mon-Fri, 8AM-4PM"
+    },
+    "Emergency Medicine": {
+      "name": "Emergency Department",
+      "specialty": "Emergency Medicine",
+      "hospital": "City Emergency Room",
+      "availability": "24/7"
+    }
+  }
+}
