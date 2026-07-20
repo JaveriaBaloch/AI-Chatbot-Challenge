@@ -27,6 +27,8 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
+pip install python-dotenv
+python3 -c "import dotenv; print('ok')"
 
 # Run tests (50 tests should pass)
 pytest test/ -v
