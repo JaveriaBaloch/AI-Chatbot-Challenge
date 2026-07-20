@@ -7,7 +7,7 @@ A sophisticated multiagent orchestration system for healthcare that routes patie
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.14+
+- Python 3.9.6+
 - Gemini API key from [Google AI Studio](https://aistudio.google.com/apikey)
 
 ### Setup
